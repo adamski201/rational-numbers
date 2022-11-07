@@ -4,35 +4,39 @@
 #include <vector>
 using namespace std;
 
-int gcf(int a, int b);
+long long int gcf(long long int a, long long int b);
 
 class Fraction
 {
     /*
-    
+        A class to represent rational numbers, as a fraction. This aims to 
+        improve precision compared to using doubles.
     */
     public:
     
         Fraction()
         {
+            // Default constructor returns 1/1
             numerator_ = 1;
             denominator_ = 1;
         }
 
-        Fraction(int a, int b)
+        Fraction(long long int a, long long int b)
         {
+            // Throws an error if user attempts to create fraction with zero as a denominator
             if (b == 0)
             {
                 throw invalid_argument("Division by zero error");
             }
 
+            // Standardises the fraction so that -a/-b -> a/b, and a/-b -> -a/b
             if ((a<0 && b<0) || (b<0 && a>0))
             {
                 a *= -1;
                 b *= -1;
             }
 
-            int factor = gcf(a, b);
+            long long int factor = gcf(a, b);
             numerator_ = a / factor;
             denominator_ = b / factor;
 
@@ -40,8 +44,9 @@ class Fraction
 
         Fraction operator+(const Fraction& other)
         {
-            int newNum = this->numerator_ * other.denominator_ + other.numerator_ * this->denominator_;
-            int newDenom = this->denominator_ * other.denominator_;
+            // Uses formula: a/b + c/d = ad+bc/bd
+            long long int newNum = this->numerator_ * other.denominator_ + other.numerator_ * this->denominator_;
+            long long int newDenom = this->denominator_ * other.denominator_;
             Fraction newFract = Fraction(newNum, newDenom);
 
             return newFract.reduce();
@@ -49,8 +54,9 @@ class Fraction
 
         Fraction operator-(const Fraction& other)
         {
-            int newNum = this->numerator_ * other.denominator_ - other.numerator_ * this->denominator_;
-            int newDenom = this->denominator_ * other.denominator_;
+            // Uses formula: a/b - c/d = ad-bc/bd
+            long long int newNum = this->numerator_ * other.denominator_ - other.numerator_ * this->denominator_;
+            long long int newDenom = this->denominator_ * other.denominator_;
             Fraction newFract = Fraction(newNum, newDenom);
 
             return newFract.reduce();
@@ -58,8 +64,9 @@ class Fraction
 
         Fraction operator*(const Fraction& other)
         {
-            int newNum = this->numerator_ * other.numerator_;
-            int newDenom = this->denominator_ * other.denominator_;
+            // Uses formula: a/b * c/d = a*c/b*d
+            long long int newNum = this->numerator_ * other.numerator_;
+            long long int newDenom = this->denominator_ * other.denominator_;
             Fraction newFract = Fraction(newNum, newDenom);
 
             return newFract.reduce();
@@ -67,61 +74,59 @@ class Fraction
 
         Fraction operator/(const Fraction& other)
         {
-            int newNum = this->numerator_ * other.denominator_;
-            int newDenom = this->denominator_ * other.numerator_;
+            // Uses formula: a/b / c/d = a*d/b*c
+            long long int newNum = this->numerator_ * other.denominator_;
+            long long int newDenom = this->denominator_ * other.numerator_;
             Fraction newFract = Fraction(newNum, newDenom);
-
             return newFract.reduce();
         }
 
         void operator+=(const Fraction& other)
         {
-            this->numerator_ = this->numerator_ * other.denominator_ 
-                             + other.numerator_ * this->denominator_;
-            this->denominator_ = this->denominator_ * other.denominator_;
-            *this = this->reduce();
+            *this = *this + other;
+            this->reduce();
         }
 
         void operator-=(const Fraction& other)
         {
-            this->numerator_ = this->numerator_ * other.denominator_ 
-                             - other.numerator_ * this->denominator_;
-            this->denominator_ = this->denominator_ * other.denominator_;
-            *this = this->reduce();
+            *this = *this - other;
+            this->reduce();
         }
 
         bool operator<(const Fraction& other) const
         {
+            // For a standardised fraction: a/b < c/d when a*d < b*c
             return (this->numerator_*other.denominator_ < other.numerator_*this->denominator_);
         }
 
         bool operator<=(const Fraction& other) const
         {
+            // For a standardised fraction: a/b <= c/d when a*d <= b*c
             return (this->numerator_*other.denominator_ <= other.numerator_*this->denominator_);
         }
 
         bool operator>(const Fraction& other) const
         {
+            // For a standardised fraction: a/b > c/d when a*d > b*c
             return (this->numerator_*other.denominator_ > other.numerator_*this->denominator_);
         }
 
         bool operator>=(const Fraction& other) const
         {
+            // For a standardised fraction: a/b >= c/d when a*d >= b*c
             return (this->numerator_*other.denominator_ >= other.numerator_*this->denominator_);
         }
 
         void operator*=(const Fraction& other)
         {
-            this->numerator_ = this->numerator_ * other.numerator_;
-            this->denominator_ = this->denominator_ * other.denominator_;
-            *this = this->reduce();
+            *this = *this * other;
+            this->reduce();
         }
 
         void operator/=(const Fraction& other)
         {
-            this->numerator_ *= other.denominator_;
-            this->denominator_ *= other.numerator_;
-            *this = this->reduce();
+            *this = *this / other;
+            this->reduce();
         }
 
         bool operator==(const Fraction& other)
@@ -134,16 +139,20 @@ class Fraction
         Fraction abs();
 
     private:
-        int numerator_;
-        int denominator_;
+        long long int numerator_;
+        long long int denominator_;
 
+        long long int gcf(long long int a, long long int b);
         Fraction reduce();
 
 };
 
-int gcf(int a, int b)
+long long int Fraction::gcf(long long int a, long long int b)
 {
-    int c = a % b;
+    // Recursive function that determines the greatest common factor.
+
+    //Performs integer division. Completes once the result of integer division is zero.
+    long long int c = a % b;
     if (c == 0)
     {
         return b;
@@ -154,11 +163,19 @@ int gcf(int a, int b)
 
 Fraction Fraction::reduce()
 {
-    int factor = gcf(numerator_, denominator_);
+    // Checks that the denominator is zero - can result from use of division operators.
+    if (this->denominator_ == 0)
+            {
+                throw invalid_argument("Division by zero error");
+            }
+
+    // Reduces fraction to its lowest equivalent form.
+    long long int factor = gcf(numerator_, denominator_);
     Fraction newFract = Fraction(numerator_ / factor, denominator_ / factor);
     
+    // Standardises fraction
     if ((newFract.denominator_ < 0 && newFract.numerator_ > 0) ||
-       (newFract.denominator_ < 0 && newFract.numerator_ < 0))
+    (newFract.denominator_ < 0 && newFract.numerator_ < 0))
     {
         newFract.denominator_ *= -1;
         newFract.numerator_ *= -1;
@@ -169,6 +186,7 @@ Fraction Fraction::reduce()
 
 bool Fraction::differentSign(const Fraction& other)
 {
+    // Returns true if the fractions have different signs
     return signbit(this->numerator_) != signbit(other.numerator_);
 }
 
@@ -183,10 +201,12 @@ void Fraction::output(ostream& out) const
 
 Fraction Fraction::abs()
 {
-    if (this->numerator_ < 0)
+    // Returns the absolute value of the fraction
+    if (this->numerator_ < 0) 
     {
-        return Fraction(this->numerator_*-1, this->denominator_);
+        return Fraction(this->numerator_ * -1, denominator_);
     } else return *this;
+    
 }
 
 ostream& operator<<(ostream& out, const Fraction& fract)
@@ -197,7 +217,8 @@ ostream& operator<<(ostream& out, const Fraction& fract)
 
 Fraction myQuadratic(Fraction x)
 {
-    Fraction twoAsFrac(2,1);
+    // Quadratic: x^2 - 2
+    Fraction twoAsFrac(2,1); // 2 is represented as a fraction
     return x * x - twoAsFrac;
 }
 
@@ -229,7 +250,7 @@ Fraction findKnownRoot(Fraction (*f)(Fraction), Fraction lower, Fraction upper, 
     // Iteratively find the new guess, and the value of the function there.
     // Check if that is a root and, if not, decide whether it should become the
     // new upper, or lower bound.
-    Fraction guess = (lower * fUpper - upper * fLower) / (fUpper - fLower);
+    Fraction guess = (lower * fUpper - upper * fLower) / (fUpper - fLower); 
     Fraction fGuess = f(guess);
     guesses.push_back(guess);
     while (fGuess.abs() > tolerance)
@@ -261,7 +282,7 @@ Fraction findRoot(Fraction (*f)(Fraction), Fraction lower, Fraction upper, vecto
         return findKnownRoot(f, lower, upper, guesses, tolerance);
     }
 
-    std::cout << "f(lower) and f(upper) have the same sign. Root might not exist in [lower, upper]." << std::endl;
+    cout << "f(lower) and f(upper) have the same sign. Root might not exist in [lower, upper]." << endl;
     exit(0);
 }
 
@@ -269,6 +290,7 @@ int main()
 {
     vector<Fraction> guesses;
     
+    // Representing the search bounds as fractions
     Fraction lower(0,1);
     Fraction upper(2,1);
     cout << "Root of x^2 - 2 is " << findRoot(myQuadratic, lower, upper, guesses) << "." << endl;
@@ -279,6 +301,4 @@ int main()
         cout << " " << guess;
     }
     cout << endl;
-
-    cout << myQuadratic(upper);
 }
